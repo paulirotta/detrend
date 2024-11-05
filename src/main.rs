@@ -1,5 +1,5 @@
-use nalgebra::{DMatrix, DVector};
 use ndarray::{Array1, Array2};
+use ndarray_inverse::*; // Import the Inverse trait from ndarray-inverse
 
 fn construct_d2(t: usize) -> Array2<f64> {
     let mut d2 = Array2::<f64>::zeros((t - 2, t));
@@ -9,23 +9,6 @@ fn construct_d2(t: usize) -> Array2<f64> {
         d2[(i, i + 2)] = 1.0;
     }
     d2
-}
-
-fn detrend_and_restore_mean(z: &[f64], lambda: f64) -> Vec<f64> {
-    let t = z.len();
-    if t < 3 {
-        return z.to_vec();
-    }
-
-    // Compute the mean of the input signal
-    let mean = z.iter().sum::<f64>() / t as f64;
-
-    // Detrend the signal
-    let z_detrended = detrend_signal(z, lambda);
-
-    // Restore the mean to the detrended signal
-    let z_restored = z_detrended.iter().map(|x| x + mean).collect();
-    z_restored
 }
 
 fn detrend_signal(z: &[f64], lambda: f64) -> Vec<f64> {
@@ -48,20 +31,11 @@ fn detrend_signal(z: &[f64], lambda: f64) -> Vec<f64> {
     let d2t_d2 = d2.t().dot(&d2);
     let a = &i + &(lambda_squared * d2t_d2);
 
-    // Convert ndarray::Array2 to nalgebra::DMatrix
-    let a_nalg = DMatrix::from_row_slice(t, t, a.as_slice().unwrap());
-
-    // Convert z to nalgebra::DVector
-    let z_nalg = DVector::from_row_slice(z);
+    // Invert the matrix A using ndarray-inverse
+    let a_inv = a.inv().unwrap();
 
     // Solve the linear system A s = z
-    let s_nalg = a_nalg
-        .lu()
-        .solve(&z_nalg)
-        .expect("Failed to solve linear system");
-
-    // Convert the solution back to ndarray::Array1
-    let s = Array1::from_vec(s_nalg.data.as_vec().clone());
+    let s = a_inv.dot(&z_array);
 
     // Compute the detrended signal: z_detrended = z_array - s
     let z_detrended = z_array - &s;
