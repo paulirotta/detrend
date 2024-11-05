@@ -1,0 +1,8 @@
+[package]
+name = "detrend"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+float-cmp = "0.10.0"
+nalgebra = "0.33.2"
