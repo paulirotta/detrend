@@ -1,4 +1,5 @@
 use nalgebra::{DMatrix, DVector};
+use statrs::statistics::Statistics;
 
 /// Constructs the second-order difference matrix D2.
 /// This matrix is used to compute the detrended signal.
@@ -22,6 +23,19 @@ fn construct_d2(t: usize) -> DMatrix<f64> {
 
 /// Detrends the input signal `z` using the specified `lambda`.
 ///
+/// Shift the resulting vector back to have the same mean as the input.
+fn detrend_signal_same_mean(z: &[f64], lambda: f64) -> Result<Vec<f64>, String> {
+    let detrended = detrend_signal(z, lambda)?;
+
+    // Shift the resulting vector back to have the same mean as the input
+    let mean_z = z.mean();
+    let z_detrended_shifted: Vec<f64> = detrended.iter().map(|&val| val + mean_z).collect();
+
+    Ok(z_detrended_shifted)
+}
+
+/// Detrends the input signal `z` using the specified `lambda`.
+///
 /// # Arguments
 ///
 /// * `z` - A slice of `f64` representing the input signal.
@@ -36,10 +50,8 @@ fn detrend_signal(z: &[f64], lambda: f64) -> Result<Vec<f64>, String> {
         return Ok(z.to_vec());
     }
 
-    // Convert input slice to DVector
     let z_vector = DVector::from_column_slice(z);
 
-    // Identity matrix I of size t x t
     let i = DMatrix::<f64>::identity(t, t);
 
     // Construct the second-order difference matrix D2
@@ -75,6 +87,11 @@ fn main() {
 
     match detrend_signal(&z, lambda) {
         Ok(detrended_signal) => println!("Detrended Signal: {:?}", detrended_signal),
+        Err(e) => eprintln!("Error detrending signal: {}", e),
+    }
+
+    match detrend_signal_same_mean(&z, lambda) {
+        Ok(detrended_signal) => println!("Detrended Signal with same mean: {:?}", detrended_signal),
         Err(e) => eprintln!("Error detrending signal: {}", e),
     }
 }
