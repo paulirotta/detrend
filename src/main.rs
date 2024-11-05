@@ -1,7 +1,8 @@
 use nalgebra::{DMatrix, DVector};
+use ndarray::{Array1, Array2};
 
-fn construct_d2(t: usize) -> DMatrix<f64> {
-    let mut d2 = DMatrix::<f64>::zeros(t - 2, t);
+fn construct_d2(t: usize) -> Array2<f64> {
+    let mut d2 = Array2::<f64>::zeros((t - 2, t));
     for i in 0..(t - 2) {
         d2[(i, i)] = 1.0;
         d2[(i, i + 1)] = -2.0;
@@ -10,40 +11,51 @@ fn construct_d2(t: usize) -> DMatrix<f64> {
     d2
 }
 
-fn detrend_signal(z: &DVector<f64>, lambda: f64) -> DVector<f64> {
+fn detrend_signal(z: &Array1<f64>, lambda: f64) -> Array1<f64> {
     let t = z.len();
     if t < 3 {
         return z.clone();
     }
 
     // Identity matrix I
-    let i = DMatrix::<f64>::identity(t, t);
+    let i = Array2::<f64>::eye(t);
 
     // Construct the second-order difference matrix D2
     let d2 = construct_d2(t);
 
     // Compute A = I + λ² D2ᵗ D2
     let lambda_squared = lambda * lambda;
-    let a = &i + lambda_squared * d2.transpose() * &d2;
+    let d2t_d2 = d2.t().dot(&d2);
+    let a = &i + &(lambda_squared * d2t_d2);
+
+    // Convert the matrix A to nalgebra::DMatrix
+    let a_matrix = DMatrix::from_row_slice(t, t, a.as_slice().unwrap());
+
+    // Convert the vector z to nalgebra::DVector
+    let z_matrix = DVector::from_row_slice(z.as_slice().unwrap());
 
     // Solve the linear system A s = z
-    let s = a.lu().solve(z).expect("Failed to solve linear system");
+    let s_matrix = a_matrix
+        .lu()
+        .solve(&z_matrix)
+        .expect("Failed to solve linear system");
+
+    // Convert the solution back to ndarray::Array1
+    let s = Array1::from_vec(s_matrix.data.as_vec().clone());
 
     // Compute the detrended signal: z_detrended = z - s
-    let z_detrended = z - s;
-
-    z_detrended
+    z - &s
 }
 
 fn main() {
     // Corrected data without the outliers
-    let z = DVector::from_vec(vec![
+    let z = Array1::from(vec![
         0.256, 0.357, 0.533, 0.372, 0.712, 0.744, 0.761, 0.525, 0.915, 0.725, 0.739, 0.764, 0.754,
         0.718, 0.707, 0.697, 0.699, 0.718, 0.931, 0.829, 0.814,
     ]);
     let lambda = 10.0;
     let detrended_signal = detrend_signal(&z, lambda);
-    println!("Detrended Signal: {:?}", detrended_signal.data.as_vec());
+    println!("Detrended Signal: {:?}", detrended_signal);
 }
 
 #[cfg(test)]
@@ -54,7 +66,7 @@ mod tests {
     #[test]
     fn test_detrend_signal() {
         // Prepare the input data
-        let z = DVector::from_vec(vec![
+        let z = Array1::from(vec![
             0.256, 0.357, 0.533, 0.372, 0.712, 0.744, 0.761, 0.525, 0.915, 0.725, 0.739, 0.764,
             0.754, 0.718, 0.707, 0.697, 0.699, 0.718, 0.931, 0.829, 0.814,
         ]);
