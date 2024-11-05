@@ -7,6 +7,6 @@ edition = "2021"
 float-cmp = "0.10.0"
 # nalgebra = "0.33.2"
 ndarray = "0.15"
-ndarray-linalg = { version = "0.15", features = ["openblas-static"] }
+ndarray-linalg = { version = "0.16.0", features = ["openblas-static"] }
 #ndarray-linalg = { version = "0.15", features = ["netlib-static"] }
 # ndarray-inverse = "0.1.9"
