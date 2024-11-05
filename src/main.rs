@@ -11,10 +11,10 @@ fn construct_d2(t: usize) -> Array2<f64> {
     d2
 }
 
-fn detrend_signal(z: &Array1<f64>, lambda: f64) -> Array1<f64> {
+fn detrend_signal(z: &Array1<f64>, lambda: f64) -> Vec<f64> {
     let t = z.len();
     if t < 3 {
-        return z.clone();
+        return z.to_vec();
     }
 
     // Identity matrix I
@@ -28,23 +28,26 @@ fn detrend_signal(z: &Array1<f64>, lambda: f64) -> Array1<f64> {
     let d2t_d2 = d2.t().dot(&d2);
     let a = &i + &(lambda_squared * d2t_d2);
 
-    // Convert the matrix A to nalgebra::DMatrix
-    let a_matrix = DMatrix::from_row_slice(t, t, a.as_slice().unwrap());
+    // Convert ndarray::Array2 to nalgebra::DMatrix
+    let a_nalg = DMatrix::from_row_slice(t, t, a.as_slice().unwrap());
 
-    // Convert the vector z to nalgebra::DVector
-    let z_matrix = DVector::from_row_slice(z.as_slice().unwrap());
+    // Convert z to nalgebra::DVector
+    let z_nalg = DVector::from_row_slice(z.as_slice().unwrap());
 
     // Solve the linear system A s = z
-    let s_matrix = a_matrix
+    let s_nalg = a_nalg
         .lu()
-        .solve(&z_matrix)
+        .solve(&z_nalg)
         .expect("Failed to solve linear system");
 
     // Convert the solution back to ndarray::Array1
-    let s = Array1::from_vec(s_matrix.data.as_vec().clone());
+    let s = Array1::from_vec(s_nalg.data.as_vec().clone());
 
     // Compute the detrended signal: z_detrended = z - s
-    z - &s
+    let z_detrended = z - &s;
+
+    // Return the detrended signal as Vec<f64>
+    z_detrended.to_vec()
 }
 
 fn main() {
