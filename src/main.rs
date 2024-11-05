@@ -1,5 +1,5 @@
 use ndarray::{Array1, Array2};
-use ndarray_inverse::*; // Import the Inverse trait from ndarray-inverse
+use ndarray_linalg::Inverse;
 
 fn construct_d2(t: usize) -> Array2<f64> {
     let mut d2 = Array2::<f64>::zeros((t - 2, t));
