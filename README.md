@@ -36,4 +36,4 @@ The smoothing parameter for HRV data should be lambda=500. This corresponds to a
 
 This is according to "Entropy in Heart Rate Dynamics Refleccts How HRV-Biofeedback Training Improves NEurovisceral Complexity during Stress-Cognition Interactions"
 
-While this filter use will make a difference in removing low end power from an FFT, it is not clear that it makes any difference to entropy calculations on short time spans of RR data. These are too short to have any components down in that frequency range.
+While this filter use will make a difference in removing low end power from an FFT, it is not clear that it makes any difference to entropy calculations on short time spans of RR data of less than about 7 minutes. These are too short to have any components down in that frequency range so there is no point in smoothing those with lambda=500.
