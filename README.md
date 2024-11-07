@@ -29,3 +29,11 @@ A = I + lambda^2 * D2' * D2;
 s = A \ z; % Solve for the smooth trend component
 z_detrended = z - s; % Compute the detrended signal
 ```
+
+## Usage
+
+The smoothing parameter for HRV data should be lambda=500. This corresponds to a time-varying FIR high-pass filter with a cut-off frequency of 0.033 Hz
+
+This is according to "Entropy in Heart Rate Dynamics Refleccts How HRV-Biofeedback Training Improves NEurovisceral Complexity during Stress-Cognition Interactions"
+
+While this filter use will make a difference in removing low end power from an FFT, it is not clear that it makes any difference to entropy calculations on short time spans of RR data. These are too short to have any components down in that frequency range.
